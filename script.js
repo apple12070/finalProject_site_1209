@@ -1,9 +1,60 @@
+//  7. Firebase 연동
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAuth,
+  GithubAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBCp77ilH7USjTD_76J8crJskpJ1rzF87o",
+  authDomain: "fir-practice-9cca2.firebaseapp.com",
+  projectId: "fir-practice-9cca2",
+  storageBucket: "fir-practice-9cca2.firebasestorage.app",
+  messagingSenderId: "793013487906",
+  appId: "1:793013487906:web:02a74a4bb78f85cd11fd7b",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GithubAuthProvider();
+
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const userInfo = document.getElementById("userInfo");
+const chatBox = document.getElementById("chatBox");
+
+loginBtn.addEventListener("click", () => {
+  signInWithPopup(auth, provider);
+});
+
+logoutBtn.addEventListener("click", () => {
+  signOut(auth).catch(console.error);
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    userInfo.textContent = `로그인 사용자: ${user.displayName || user.email}`;
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+    chatBox.style.display = "block";
+  } else {
+    userInfo.textContent = "로그인하지 않았습니다.";
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+    chatBox.style.display = "none";
+  }
+});
+
 // 1. 책 데이터 로드 & 렌더링
 const BOOKS_JSON_URL =
-  "https://raw.githubusercontent.com/apple12070/finalProject_api/refs/heads/main/books_yes24.json?token=GHSAT0AAAAAADNP4DJKLGTVS4QCUWSNZIK42JXRCUA";
+  "https://raw.githubusercontent.com/apple12070/finalProject_api/refs/heads/main/books_yes24.json?token=GHSAT0AAAAAADNP4DJLTYPM7RNEDGSUSJEU2JXTSHA";
 
 const GOODS_JSON_URL =
-  "https://raw.githubusercontent.com/apple12070/finalProject_api/refs/heads/main/goods_yes24.json?token=GHSAT0AAAAAADNP4DJLX7WDGMZJVGNW3BLY2JXRCZQ";
+  "https://raw.githubusercontent.com/apple12070/finalProject_api/refs/heads/main/goods_yes24.json?token=GHSAT0AAAAAADNP4DJLEDPKLMA3UY5ZMBRM2JXTSUA";
 
 // 우리는 api 많아서 객체 형태로 끌어와야 함!!!!!!
 // const API_URL = {
@@ -24,6 +75,7 @@ const GOODS_JSON_URL =
 //   renderBooks(allBooks);
 // }
 
+// 1. 데이터 로드 & 렌더링 <??? 맞나?
 let booksData = [];
 let goodsData = [];
 
@@ -41,7 +93,10 @@ async function loadAllData() {
   renderBooks(booksData);
 }
 
+// 2. 브라우저 스캔 후 데이터 로드 및 렌더링 실행
 window.addEventListener("load", loadAllData);
+
+// 3. 카테고리 드롭다운 생성
 
 function populateCategoryDropdown() {
   const categorySelect = document.getElementById("categorySelect");
@@ -57,6 +112,7 @@ function populateCategoryDropdown() {
   });
 }
 
+// 4. 책 목록 렌더링 - API 활용 생성
 function renderBooks(books) {
   const listEl = document.getElementById("bookList");
   listEl.innerHTML = "";
@@ -90,16 +146,18 @@ function renderBooks(books) {
   });
 }
 
+// 실질적으로 카테고리가 적용되게 만드는 함수
+// 5. 책 검색 & 필터 함수
 function applyFilters() {
-  const qRaw = document.getElementById("searchInput").value;
-  const q = qRaw.trim().toLowerCase();
-  const cat = document.getElementById("categorySelect").value;
+  const qRaw = document.getElementById("searchInput").value; // 검색어
+  const q = qRaw.trim().toLowerCase(); // 검색어 정규화
+  const cat = document.getElementById("categorySelect").value; // 카테고리
   const filtered = booksData.filter((book) => {
-    const inCategory = !cat || cat === "all" ? true : book.category === cat;
+    const inCategory = !cat || cat === "all" ? true : book.category === cat; // 카테고리 필터링
     const text = `${book.title || ""} ${book.author || ""} ${
       book.publisher || ""
-    }`.toLowerCase();
-    const inSearch = q ? text.includes(q) : true;
+    }`.toLowerCase(); // 검색어 필터링
+    const inSearch = q ? text.includes(q) : true; // 검색어 필터링
     return inCategory && inSearch;
   });
   renderBooks(filtered);
@@ -111,6 +169,7 @@ function applyFilters() {
   }
 }
 
+// 6. 책 검색 필터 실제 적용
 document.getElementById("searchInput").addEventListener("input", applyFilters);
 document
   .getElementById("categorySelect")
