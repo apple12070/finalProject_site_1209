@@ -1,0 +1,199 @@
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #eff1ff;
+}
+header {
+  background: #76a6ff;
+  color: #fff;
+  padding: 16px;
+}
+.filters {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.filters input,
+.filters select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+.book-list {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.book-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+}
+.book-card img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+}
+.book-card h3 {
+  font-size: 16px;
+  margin: 8px 0 4px;
+}
+.book-card .meta {
+  font-size: 12px;
+  color: #555;
+}
+.book-card button {
+  margin-top: auto;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: none;
+  background: #0070f3;
+  color: #fff;
+  cursor: pointer;
+}
+.comment-section {
+  background: #fff;
+  margin: 16px;
+  padding: 16px;
+  border-radius: 8px;
+}
+#commentForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#commentForm input,
+#commentForm textarea {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+#commentList {
+  list-style: none;
+  padding: 0;
+  margin-top: 12px;
+}
+#commentList li {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+.hidden {
+  display: none;
+}
+#cameraArea {
+  margin-top: 8px;
+}
+#cameraPreview {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.my-comments-btn {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: none;
+  background: #444;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+.my-comments-btn:hover {
+  background: #666;
+}
+
+.goods-section {
+  margin-top: 24px;
+}
+.goods-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.goods-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 13px;
+}
+.goods-card img {
+  width: 100%;
+  border-radius: 6px;
+}
+.goods-title {
+  margin-top: 4px;
+}
+.goods-price {
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 60px;
+  z-index: 1000;
+}
+.modal.hidden {
+  display: none !important;
+}
+.modal-content {
+  background: #fff;
+  border-radius: 8px;
+  max-width: 900px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: auto;
+  padding: 16px 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+.modal-close {
+  border: none;
+  background: none;
+  font-size: 20px;
+  float: right;
+  cursor: pointer;
+}
+.modal-summary {
+  margin: 8px 0 12px;
+  font-size: 14px;
+  color: #555;
+}
+.modal-body {
+  display: flex;
+  gap: 16px;
+}
+.modal-col {
+  flex: 1;
+  font-size: 14px;
+}
+#myCommentsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#myCommentsList li {
+  border-bottom: 1px solid #eee;
+  padding: 6px 0;
+}
+#myCommentsList li small {
+  display: block;
+  color: #888;
+  font-size: 12px;
+}
+#myCommentsWords {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#myCommentsWords li {
+  padding: 2px 0;
+}

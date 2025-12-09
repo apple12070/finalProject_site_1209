@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"
+    />
+    <meta name="theme-color" content="#667eea" />
+    <title>Beautrip - 미용 시술 찾기</title>
+    <link rel="stylesheet" href="./style02.css" />
+    <script defer type="module" src="./script02.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="header-content">
+        <h1>뷰트립(api 테스트페이지)</h1>
+        <button
+          id="filterToggle"
+          class="filter-toggle"
+          aria-label="필터 열기/닫기"
+        >
+          <span>필터</span>
+        </button>
+      </div>
+      <div class="filters" id="filtersContainer">
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="시술명 / 병원명 검색"
+        />
+        <select id="categoryLargeSelect">
+          <option value="">전체 카테고리</option>
+        </select>
+        <select id="categoryMidSelect">
+          <option value="">중분류</option>
+        </select>
+        <select id="sortSelect">
+          <option value="default">정렬</option>
+          <option value="price-low">가격 낮은순</option>
+          <option value="price-high">가격 높은순</option>
+          <option value="rating">평점 높은순</option>
+          <option value="review">리뷰 많은순</option>
+        </select>
+      </div>
+    </header>
+    <main>
+      <section id="treatmentList" class="treatment-list"></section>
+    </main>
+  </body>
+</html>

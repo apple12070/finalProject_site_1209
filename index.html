@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yes24 Book Hub</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script defer type="module" src="./script.js"></script>
+    <!-- 라이브러리 모듈 가져와야 함 (import개념) 그래서 처음에 타입을 모듈로 해두지 않으면 에러!!! -->
+  </head>
+  <body>
+    <header>
+      <h1>YES24 Book Hub</h1>
+      <button id="myCommentsToggle" class="my-comments-btn">
+        내 댓글 모아보기
+      </button>
+      <div class="filters">
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="책 제목 / 저자 / 출판사 검색"
+        />
+        <select id="categorySelect">
+          <option value="">전체 카테고리</option>
+        </select>
+      </div>
+    </header>
+    <main>
+      <!--실시간 채팅  -->
+      <section id="authSection" class="author-section">
+        <h2>GitHub 로그인 & 채팅</h2>
+        <button id="loginBtn">GitHub로 로그인</button>
+        <button id="logoutBtn" style="display: none">로그아웃</button>
+        <!-- 로그인 -> 로그아웃으로 바뀌는 건 스크립트에서 제어하는 것임 "display: none"라서 안 보임  -->
+        <p id="userInfo"></p>
+        <div id="chatBox" style="display: none">
+          <!-- 로그인하지 않은 사람에게는 display: none" 처리 -->
+          <ul id="chatMessages"></ul>
+          <form id="chatForm">
+            <input id="chatInput" placeholder="메시지를 입력하세요" required />
+            <input id="chatImage" type="file" accept="image/*" />
+            <button type="button" id="cameraButton">촬영하기</button>
+            <button type="submit">전송</button>
+          </form>
+          <div id="cameraArea" class="hidden">
+            <video id="cameraPreview" autoplay playsinline></video>
+            <div>
+              <button type="button" id="captureButton">촬영</button>
+              <button type="button" id="closeCameraButton">닫기</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- 보기에는 코드로 보여지나, 실질적으로 스크립트에서 만들어진 것 그래서 time 함수가 필요 -->
+      <section id="bookList" class="book-list"></section>
+      <section id="relatedGoods"></section>
+      <!-- 댓글 영역 /// 같은 디자인을 쓰고 싶기 때문에 class값이 authSection과 같음!! -->
+      <section id="commentSection" class="comment-section">
+        <h2 id="commentBookTitle">댓글</h2>
+        <form id="commentForm">
+          <input
+            type="text"
+            id="commentNickname"
+            placeholder="닉네임"
+            required
+          />
+          <textarea
+            id="commentText"
+            placeholder="댓글을 입력하세요"
+            required
+          ></textarea>
+          <button type="submit">댓글 등록</button>
+        </form>
+        <ul id="commentList"></ul>
+      </section>
+    </main>
+    <div id="myCommentsModal" class="modal hidden">
+      <div class="modal-content">
+        <button id="myCommentsClose" class="modal-close">&times;</button>
+        <h2>내가 남긴 댓글 요약</h2>
+        <p id="myCommentsSummary" class="modal-summary"></p>
+        <div class="modal-body">
+          <div class="modal-col">
+            <h3>내 댓글 목록</h3>
+            <ul id="myCommentsList"></ul>
+          </div>
+          <div class="modal-col">
+            <h3>단어 TOP 10</h3>
+            <ul id="myCommentsWords"></ul>
+            <h3 style="margin-top: 16px">감성(긍정 / 부정)</h3>
+            <p id="myCommentsSentiment"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
