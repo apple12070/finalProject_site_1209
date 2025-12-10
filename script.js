@@ -9,6 +9,22 @@ import {
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  query,
+  orderBy,
+  onSnapshot,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyBCp77ilH7USjTD_76J8crJskpJ1rzF87o",
   authDomain: "fir-practice-9cca2.firebaseapp.com",
@@ -21,6 +37,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GithubAuthProvider();
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
@@ -51,10 +69,10 @@ onAuthStateChanged(auth, (user) => {
 
 // 1. 책 데이터 로드 & 렌더링
 const BOOKS_JSON_URL =
-  "https://raw.githubusercontent.com/apple12070/finalProject_api/refs/heads/main/books_yes24.json?token=GHSAT0AAAAAADNP4DJLTYPM7RNEDGSUSJEU2JXTSHA";
+  "https://raw.githubusercontent.com/apple12070/finalProject_api_1210/refs/heads/main/books_yes24.json";
 
 const GOODS_JSON_URL =
-  "https://raw.githubusercontent.com/apple12070/finalProject_api/refs/heads/main/goods_yes24.json?token=GHSAT0AAAAAADNP4DJLEDPKLMA3UY5ZMBRM2JXTSUA";
+  "https://raw.githubusercontent.com/apple12070/finalProject_api_1210/refs/heads/main/goods_yes24.json";
 
 // 우리는 api 많아서 객체 형태로 끌어와야 함!!!!!!
 // const API_URL = {
@@ -75,7 +93,12 @@ const GOODS_JSON_URL =
 //   renderBooks(allBooks);
 // }
 
-// 1. 데이터 로드 & 렌더링 <??? 맞나?
+// ===== 8. Firebase Chat =====
+const chatMessages = document.getElementById("chatMessages");
+const chatForm = document.getElementById("chatForms");
+const chatInput = document.getElementById("chatInput");
+
+// ===== 1. 책 & 굿즈 데이터 로드 & 렌더링 =====
 let booksData = [];
 let goodsData = [];
 
