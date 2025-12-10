@@ -102,6 +102,57 @@ const chatMessages = document.getElementById("chatMessages");
 const chatForm = document.getElementById("chatForms");
 const chatInput = document.getElementById("chatInput");
 
+const messagesRef = collection(db, "messages");
+const qMessages = query(messagesRef, orderBy("created_at", "asc"));
+onSnapshot(qMessages, (snapshot) => {
+  chatMessages.innerHTML = "";
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    const li = document.createElement("li");
+    let html = `<strong>${data.user_name}</strong>: ${data.text || ""}`;
+    if (data.imageUrl) {
+      html += `<br /><img src="${data.imageUrl}" alt="image" style="max-width:200px; border-radius:8px; margin-top:4px;" />`;
+    }
+    li.innerHTML = html;
+    chatMessages.appendChild(li);
+  });
+});
+const chatImageInput = document.getElementById("chatImage");
+chatForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const user = auth.currentUser;
+  if (!user) {
+    alert("먼저 GitHub로 로그인 해주세요.");
+    return;
+  }
+  const text = chatInput.value;
+  const file = chatImageInput.files[0];
+  if (!text.trim() && !file) {
+    return;
+  }
+  let imageUrl = null;
+  try {
+    if (file) {
+      const filePath = `chatImages/${user.uid}/${Date.now()}_${file.name}`;
+      const storageRef = ref(storage, filePath);
+      await uploadBytes(storageRef, file);
+      imageUrl = await getDownloadURL(storageRef);
+    }
+    await addDoc(messagesRef, {
+      user_id: user.uid,
+      user_name: user.displayName || user.email,
+      text,
+      imageUrl,
+      created_at: serverTimestamp(),
+    });
+    chatInput.value = "";
+    chatImageInput.value = "";
+  } catch (err) {
+    console.error("채팅 저장 오류:", err);
+    alert("메시지를 전송하는 중 오류가 발생했습니다.");
+  }
+});
+
 // ===== 1. 책 & 굿즈 데이터 로드 & 렌더링 =====
 let booksData = [];
 let goodsData = [];
