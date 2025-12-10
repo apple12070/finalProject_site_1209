@@ -71,32 +71,6 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// 1. 책 데이터 로드 & 렌더링
-const BOOKS_JSON_URL =
-  "https://raw.githubusercontent.com/apple12070/finalProject_api_1210/refs/heads/main/books_yes24.json";
-
-const GOODS_JSON_URL =
-  "https://raw.githubusercontent.com/apple12070/finalProject_api_1210/refs/heads/main/goods_yes24.json";
-
-// 우리는 api 많아서 객체 형태로 끌어와야 함!!!!!!
-// const API_URL = {
-//   api1:"",
-//   api1:"",
-//   api1:"",
-//   api1:"",
-// }
-
-// 지난 수업!
-// let allBooks = [];
-// async function loadBooks() {
-//   const res = await fetch(API_URL);
-//   allBooks = await res.json();
-//   // 이거 비동기처리라서 url찾기도 전에 json 변환할 수도 있어서 await 꼭 적어줘야 함
-//   console.log(allBooks);
-//   // 이 함수가 allBooks 값을 출력함
-//   renderBooks(allBooks);
-// }
-
 // ===== 8. Firebase Chat =====
 const chatMessages = document.getElementById("chatMessages");
 const chatForm = document.getElementById("chatForms");
@@ -152,6 +126,32 @@ chatForm.addEventListener("submit", async (e) => {
     alert("메시지를 전송하는 중 오류가 발생했습니다.");
   }
 });
+
+// 1. 책 데이터 로드 & 렌더링
+const BOOKS_JSON_URL =
+  "https://raw.githubusercontent.com/apple12070/finalProject_api_1210/refs/heads/main/books_yes24.json";
+
+const GOODS_JSON_URL =
+  "https://raw.githubusercontent.com/apple12070/finalProject_api_1210/refs/heads/main/goods_yes24.json";
+
+// 우리는 api 많아서 객체 형태로 끌어와야 함!!!!!!
+// const API_URL = {
+//   api1:"",
+//   api1:"",
+//   api1:"",
+//   api1:"",
+// }
+
+// 지난 수업!
+// let allBooks = [];
+// async function loadBooks() {
+//   const res = await fetch(API_URL);
+//   allBooks = await res.json();
+//   // 이거 비동기처리라서 url찾기도 전에 json 변환할 수도 있어서 await 꼭 적어줘야 함
+//   console.log(allBooks);
+//   // 이 함수가 allBooks 값을 출력함
+//   renderBooks(allBooks);
+// }
 
 // ===== 1. 책 & 굿즈 데이터 로드 & 렌더링 =====
 let booksData = [];
