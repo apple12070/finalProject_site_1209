@@ -1,6 +1,7 @@
 //  7. Firebase 연동
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
+// Firebase Auth
 import {
   getAuth,
   GithubAuthProvider,
@@ -9,6 +10,7 @@ import {
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+// Firebase Firestore
 import {
   getFirestore,
   collection,
@@ -18,6 +20,8 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// Firebase Storage
 import {
   getStorage,
   ref,
