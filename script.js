@@ -156,49 +156,19 @@ const GOODS_JSON_URL =
 // ===== 1. 책 & 굿즈 데이터 로드 & 렌더링 =====
 let booksData = [];
 let goodsData = [];
-let dataLoaded = false;
 
 async function loadAllData() {
-  try {
-    const [booksRes, goodsRes] = await Promise.all([
-      fetch(BOOKS_JSON_URL),
-      fetch(GOODS_JSON_URL),
-    ]);
+  const [books, goods] = await Promise.all([
+    fetch(BOOKS_JSON_URL),
+    fetch(GOODS_JSON_URL),
+  ]);
 
-    if (!booksRes.ok || !goodsRes.ok) {
-      throw new Error("API 요청 실패");
-    }
+  booksData = await books.json();
+  goodsData = await goods.json();
 
-    const booksJson = await booksRes.json();
-    const goodsJson = await goodsRes.json();
+  populateCategoryDropdown();
 
-    // 데이터가 배열인지 확인하고, 객체로 감싸져 있을 수 있으므로 처리
-    booksData = Array.isArray(booksJson)
-      ? booksJson
-      : booksJson.books || booksJson.data || [];
-    goodsData = Array.isArray(goodsJson)
-      ? goodsJson
-      : goodsJson.goods || goodsJson.data || [];
-
-    if (!Array.isArray(booksData) || booksData.length === 0) {
-      console.error("책 데이터가 올바르지 않습니다:", booksData);
-      booksData = [];
-    }
-
-    if (!Array.isArray(goodsData)) {
-      goodsData = [];
-    }
-
-    dataLoaded = true;
-    populateCategoryDropdown();
-    renderBooks(booksData);
-  } catch (err) {
-    console.error("데이터 로드 오류:", err);
-    alert("데이터를 불러오는 중 오류가 발생했습니다. 콘솔을 확인해주세요.");
-    booksData = [];
-    goodsData = [];
-    dataLoaded = false;
-  }
+  renderBooks(booksData);
 }
 
 // 2. 브라우저 스캔 후 데이터 로드 및 렌더링 실행
@@ -208,16 +178,6 @@ window.addEventListener("load", loadAllData);
 
 function populateCategoryDropdown() {
   const categorySelect = document.getElementById("categorySelect");
-  if (!categorySelect) {
-    console.error("categorySelect 요소를 찾을 수 없습니다.");
-    return;
-  }
-
-  if (!Array.isArray(booksData) || booksData.length === 0) {
-    console.warn("책 데이터가 없어 카테고리를 생성할 수 없습니다.");
-    return;
-  }
-
   categorySelect.innerHTML = "";
   const categories = [
     ...new Set(booksData.map((b) => b.category).filter(Boolean)),
@@ -233,25 +193,7 @@ function populateCategoryDropdown() {
 // 4. 책 목록 렌더링 - API 활용 생성
 function renderBooks(books) {
   const listEl = document.getElementById("bookList");
-  if (!listEl) {
-    console.error("bookList 요소를 찾을 수 없습니다.");
-    return;
-  }
-
-  // books가 배열이 아니거나 비어있으면 처리
-  if (!Array.isArray(books)) {
-    console.error("renderBooks: books가 배열이 아닙니다:", books);
-    listEl.innerHTML = "<p>책 데이터를 불러올 수 없습니다.</p>";
-    return;
-  }
-
   listEl.innerHTML = "";
-
-  if (books.length === 0) {
-    listEl.innerHTML = "<p>표시할 책이 없습니다.</p>";
-    return;
-  }
-
   books.forEach((book) => {
     const card = document.createElement("article");
     card.className = "book-card";
@@ -277,13 +219,7 @@ function renderBooks(books) {
       <button type="button">댓글 보기</button>
     `;
     const btn = card.querySelector("button");
-    btn.addEventListener("click", () => {
-      if (typeof openCommentSection === "function") {
-        openCommentSection(book);
-      } else {
-        console.warn("openCommentSection 함수가 정의되지 않았습니다.");
-      }
-    });
+    btn.addEventListener("click", () => openCommentSection(book));
     listEl.appendChild(card);
   });
 }
@@ -291,17 +227,11 @@ function renderBooks(books) {
 // 실질적으로 카테고리가 적용되게 만드는 함수
 // 5. 책 검색 & 필터 함수
 function applyFilters() {
-  // 데이터가 로드되지 않았으면 필터 적용하지 않음
-  if (!dataLoaded || !Array.isArray(booksData) || booksData.length === 0) {
-    return;
-  }
-
-  const qRaw = document.getElementById("searchInput")?.value || ""; // 검색어
+  const qRaw = document.getElementById("searchInput").value; // 검색어
   const q = qRaw.trim().toLowerCase(); // 검색어 정규화
-  const cat = document.getElementById("categorySelect")?.value || ""; // 카테고리
+  const cat = document.getElementById("categorySelect").value; // 카테고리
   const filtered = booksData.filter((book) => {
-    const inCategory =
-      !cat || cat === "all" || cat === "" ? true : book.category === cat; // 카테고리 필터링
+    const inCategory = !cat || cat === "all" ? true : book.category === cat; // 카테고리 필터링
     const text = `${book.title || ""} ${book.author || ""} ${
       book.publisher || ""
     }`.toLowerCase(); // 검색어 필터링
@@ -310,32 +240,94 @@ function applyFilters() {
   });
   renderBooks(filtered);
   if (q) {
-    // renderRelatedGoods 함수가 있으면 호출, 없으면 무시
-    if (typeof renderRelatedGoods === "function") {
-      renderRelatedGoods(q, filtered);
-    }
+    renderRelatedGoods(q, filtered);
   } else {
     const goodsContainer = document.getElementById("relatedGoods");
     if (goodsContainer) goodsContainer.innerHTML = "";
   }
 }
 
-// 6. 책 검색 필터 실제 적용 (디바운싱 추가로 깜빡임 방지)
-let filterTimeout;
-function debouncedApplyFilters() {
-  clearTimeout(filterTimeout);
-  filterTimeout = setTimeout(applyFilters, 300); // 300ms 지연
+// 6. 책 검색 필터 실제 적용
+document.getElementById("searchInput").addEventListener("input", applyFilters);
+document
+  .getElementById("categorySelect")
+  .addEventListener("change", applyFilters);
+
+// 9. 카메라 열기 / 캡처 / 닫기
+const cameraButton = document.getElementById("cameraButton");
+const cameraArea = document.getElementById("cameraArea");
+const cameraPreview = document.getElementById("cameraPreview");
+const captureButton = document.getElementById("captureButton");
+const closeCameraButton = document.getElementById("closeCameraButton");
+
+// 카메라 켜기
+let cameraStream = null;
+cameraButton.addEventListener("click", async () => {
+  try {
+    if (cameraStream) {
+      cameraArea.classList.remove("hidden");
+      return;
+    }
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    cameraPreview.srcObject = cameraStream;
+    cameraArea.classList.remove("hidden");
+  } catch (err) {
+    console.error("카메라 접근 실패:", err);
+    alert("카메라를 사용할 수 없습니다. 브라우저 권한을 확인해주세요.");
+  }
+});
+
+// 카메라 끄기
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach((track) => track.stop());
+    cameraStream = null;
+  }
+  cameraArea.classList.add("hidden");
 }
+closeCameraButton.addEventListener("click", stopCamera);
 
-// DOM이 로드된 후에만 이벤트 리스너 추가
-window.addEventListener("DOMContentLoaded", () => {
-  const searchInput = document.getElementById("searchInput");
-  const categorySelect = document.getElementById("categorySelect");
-
-  if (searchInput) {
-    searchInput.addEventListener("input", debouncedApplyFilters);
+// 캡처(카메라 촬영) 기능
+captureButton.addEventListener("click", () => {
+  if (!cameraStream) return;
+  const user = auth.currentUser;
+  if (!user) {
+    alert("먼저 GitHub로 로그인 해주세요.");
+    return;
   }
-  if (categorySelect) {
-    categorySelect.addEventListener("change", applyFilters);
-  }
+  const track = cameraStream.getVideoTracks()[0];
+  const settings = track.getSettings();
+  const width = settings.width || 640;
+  const height = settings.height || 480;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(cameraPreview, 0, 0, width, height);
+  canvas.toBlob(
+    async (blob) => {
+      if (!blob) return;
+      try {
+        const filePath = `chatImages/${user.uid}/${Date.now()}_camera.jpg`;
+        const storageRef = ref(storage, filePath);
+        await uploadBytes(storageRef, blob);
+        const imageUrl = await getDownloadURL(storageRef);
+        const text = chatInput.value;
+        await addDoc(messagesRef, {
+          user_id: user.uid,
+          user_name: user.displayName || user.email,
+          text,
+          imageUrl,
+          created_at: serverTimestamp(),
+        });
+        chatInput.value = "";
+        stopCamera(); // 촬영 후 카메라 닫기
+      } catch (err) {
+        console.error("촬영 이미지 전송 오류:", err);
+        alert("사진을 전송하는 중 오류가 발생했습니다.");
+      }
+    },
+    "image/jpeg",
+    0.9
+  );
 });
