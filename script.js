@@ -173,6 +173,8 @@ const categoryGoodsMap = {
 let selectedBook = null;
 // const, let, var -> var는 재생성,재할당 등 여러가지가 가능함. 근데 거의 안 씀. const, let만 주로 씀
 
+let pinnedSet = new Set();
+
 async function loadAllData() {
   const [books, goods] = await Promise.all([
     fetch(BOOKS_JSON_URL),
@@ -213,30 +215,42 @@ function renderBooks(books) {
   books.forEach((book) => {
     const card = document.createElement("article");
     card.className = "book-card";
+    const isPinned = pinnedSet.has(book.detail_url);
+
     const url = book.detail_url || "#";
     card.innerHTML = `
-      <a href="${url}" target="_blank" rel="noopener noreferrer">
-        <img src="${book.thumb || ""}" alt="${book.title || ""}" />
-      </a>
-      <h3>
-        <a href="${url}" target="_blank" rel="noopener noreferrer">
-          ${book.title || "제목 없음"}
-        </a>
-      </h3>
-      <p class="meta">${book.author || "저자 미상"} | ${
-      book.publisher || ""
-    }</p>
-      <p class="meta">정가: ${book.list_price || "-"} / 판매가: ${
-      book.sale_price || "-"
-    }</p>
-      <p class="meta">카테고리: ${book.category || ""} | 재고: ${
-      book.stock || ""
-    }</p>
-      <button type="button">댓글 보기</button>
+      <div class="book-thumb-wrap">
+        <img src="${book.thumbnail}" alt="${book.title}">
+        <button
+          class="pin-btn ${isPinned ? "pinned" : ""}"
+          data-detail-url="${book.detail_url}"
+          data-title="${book.title}"
+          data-thumbnail="${book.thumbnail || ""}"
+        >
+          :📌:
+        </button>
+      </div>
+      <h3 class="book-title">${book.title}</h3>
+      <p class="book-author">${book.author || ""}</p>
+      <p class="book-price">${book.sale_price?.toLocaleString() || ""}</p>
+      <button class="comment-open-btn detail-btn">댓글 보기</button>
     `;
-    const btn = card.querySelector("button");
-    btn.addEventListener("click", () => openCommentSection(book));
+    const commentBtn = card.querySelector(".comment-open-btn");
+    commentBtn.addEventListener("click", () => openCommentSection(book));
     listEl.appendChild(card);
+  });
+
+  const pinButtons = listEl.querySelectorAll(".pin-btn");
+  pinButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation(); // 혹시 모를 버블링 방지
+      const book = {
+        detail_url: btn.dataset.detailUrl,
+        title: btn.dataset.title,
+        thumbnail: btn.dataset.thumbnail,
+      };
+      togglePin(book, btn);
+    });
   });
 }
 
@@ -380,8 +394,7 @@ async function loadComments(book) {
     listEl.innerHTML = "";
     const user = auth.currentUser;
     if (rows.length === 0) {
-      listEl.innerHTML =
-        "<li>첫 번째 댓글을 남겨보세요 :미소짓는_상기된_얼굴:</li>";
+      listEl.innerHTML = "<li>첫 번째 댓글을 남겨보세요 :😉:</li>";
     } else {
       rows.forEach((row) => {
         const li = document.createElement("li");
@@ -714,3 +727,100 @@ captureButton.addEventListener("click", () => {
     0.9
   );
 });
+
+// =====12. 스크랩 모달창 오픈 & 데이터 렌더링 =====
+
+async function togglePin(book, buttonEl) {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("로그인 후 스크랩 기능을 사용할 수 있습니다.");
+    return;
+  }
+  const bookUrl = book.detail_url;
+  const isPinned = pinnedSet.has(bookUrl);
+  if (!isPinned) {
+    const payload = {
+      firebase_uid: user.uid,
+      book_url: bookUrl,
+      title: book.title,
+      thumbnail: book.thumbnail,
+    };
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/favorites`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      console.error("스크랩 저장 실패", await res.text());
+      alert("스크랩 저장 중 오류가 발생했습니다.");
+      return;
+    }
+    pinnedSet.add(bookUrl);
+    buttonEl.classList.add("pinned");
+  } else {
+    const deleteUrl =
+      `${SUPABASE_URL}/rest/v1/favorites` +
+      `?firebase_uid=eq.${user.uid}` +
+      `&book_url=eq.${encodeURIComponent(bookUrl)}`;
+    const res = await fetch(deleteUrl, {
+      method: "DELETE",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Prefer: "return=minimal",
+      },
+    });
+    if (!res.ok) {
+      console.error("스크랩 삭제 실패", await res.text());
+      alert("스크랩 삭제 중 오류가 발생했습니다.");
+      return;
+    }
+    pinnedSet.delete(bookUrl);
+    buttonEl.classList.remove("pinned");
+  }
+}
+
+async function openMyPinsModal() {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("로그인 후 내 스크랩을 볼 수 있습니다.");
+    return;
+  }
+  const url = `${SUPABASE_URL}/rest/v1/favorites?firebase_uid=eq.${user.uid}&order=created_at.desc`;
+  const res = await fetch(url, {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+  });
+  const rows = await res.json();
+  const listEl = document.getElementById("myPinsList");
+  listEl.innerHTML = "";
+  if (rows.length === 0) {
+    listEl.innerHTML = "<li>아직 스크랩한 책이 없습니다 :미소짓는_얼굴:</li>";
+  } else {
+    rows.forEach((row) => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <a href="${row.book_url}" target="_blank" class="my-pin-item">
+          ${
+            row.thumbnail
+              ? `<img src="${row.thumbnail}" alt="${row.title}">`
+              : ""
+          }
+          <span>${row.title}</span>
+        </a>
+      `;
+      listEl.appendChild(li);
+    });
+  }
+}
+
+document
+  .getElementById("openMyPinsModal")
+  .addEventListener("click", openMyPinsModal);

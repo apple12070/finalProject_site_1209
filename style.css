@@ -2,30 +2,39 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   margin: 0;
   padding: 0;
-  background: #eff1ff;
+  background: #f5f5f5;
 }
+
+a {
+  text-decoration: none;
+}
+
 header {
-  background: #76a6ff;
+  background: #222;
   color: #fff;
   padding: 16px;
 }
+
 .filters {
   display: flex;
   gap: 8px;
   margin-top: 8px;
 }
+
 .filters input,
 .filters select {
   padding: 8px;
   border-radius: 4px;
   border: 1px solid #ccc;
 }
+
 .book-list {
   display: grid;
   gap: 16px;
   padding: 16px;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
+
 .book-card {
   background: #fff;
   border-radius: 8px;
@@ -34,20 +43,24 @@ header {
   display: flex;
   flex-direction: column;
 }
+
 .book-card img {
   width: 100%;
   max-height: 200px;
   object-fit: contain;
 }
+
 .book-card h3 {
   font-size: 16px;
   margin: 8px 0 4px;
 }
+
 .book-card .meta {
   font-size: 12px;
   color: #555;
 }
-.book-card button {
+
+.book-card .detail-btn {
   margin-top: auto;
   padding: 6px 10px;
   border-radius: 4px;
@@ -56,32 +69,50 @@ header {
   color: #fff;
   cursor: pointer;
 }
+
+.book-card .pin-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
 .comment-section {
   background: #fff;
   margin: 16px;
   padding: 16px;
   border-radius: 8px;
 }
+
 #commentForm {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 #commentForm input,
 #commentForm textarea {
   padding: 8px;
   border-radius: 4px;
   border: 1px solid #ccc;
 }
+
 #commentList {
   list-style: none;
   padding: 0;
   margin-top: 12px;
 }
+
 #commentList li {
   padding: 8px 0;
   border-bottom: 1px solid #eee;
 }
+
 .hidden {
   display: none;
 }
@@ -93,6 +124,24 @@ header {
   border-radius: 8px;
 }
 
+.my-comments-btn {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: none;
+  background: #444;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+.my-comments-btn:hover {
+  background: #666;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 .my-comments-btn {
   padding: 6px 10px;
   border-radius: 4px;
@@ -196,4 +245,50 @@ header {
 }
 #myCommentsWords li {
   padding: 2px 0;
+}
+
+#openMyPinsModal {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: none;
+  background: #444;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+#openMyPinsModal:hover {
+  background: #666;
+}
+.book-thumb-wrap {
+  position: relative;
+}
+.pin-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.pin-btn.pinned {
+  background: #ffcc00;
+}
+.my-pin-item img {
+  width: 120px;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
+#myPinsList li {
+  margin: 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.my-pin-item span {
+  font-size: 16px;
+  font-weight: 500;
 }
