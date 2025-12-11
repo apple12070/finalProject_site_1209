@@ -1,4 +1,4 @@
-//  7. Firebase 연동
+//  7. Firebase Init
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 // Firebase Auth
@@ -134,6 +134,12 @@ const BOOKS_JSON_URL =
 const GOODS_JSON_URL =
   "https://raw.githubusercontent.com/apple12070/finalProject_api_1210/refs/heads/main/goods_yes24.json";
 
+// SUpabase SQL API 로드
+const SUPABASE_URL = "https://qbtelfyktdrghpesmjqy.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidGVsZnlrdGRyZ2hwZXNtanF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMzU1MjIsImV4cCI6MjA4MDkxMTUyMn0.l_rU3002n3n6tdBhEmHN1QWBfOvhl_z5AnUUlIgsFpU";
+const SUPABASW_TABLE = "comments";
+
 // 우리는 api 많아서 객체 형태로 끌어와야 함!!!!!!
 // const API_URL = {
 //   api1:"",
@@ -197,7 +203,7 @@ function populateCategoryDropdown() {
   });
 }
 
-// 4. 책 목록 렌더링 - API 활용 생성
+// 4. 책 정보 API 활용 화면 출력
 function renderBooks(books) {
   const listEl = document.getElementById("bookList");
   listEl.innerHTML = "";
@@ -232,6 +238,7 @@ function renderBooks(books) {
 }
 
 // 실질적으로 카테고리가 적용되게 만드는 함수
+
 // 5. 책 검색 & 필터 함수
 function applyFilters() {
   const qRaw = document.getElementById("searchInput").value; // 검색어
@@ -309,6 +316,127 @@ function renderRelatedGoods(keyword, filteredBooks) {
   });
 }
 
+// ==== 11. Supabase 댓글 렌더링 ====
+// 준 Fullstack : 프론트 + 백엔드
+// CRUD
+// 사이트구축.플랫폼 => CRUD
+// Create : 댓글 작성
+// Read : 타인 읽음
+// Update : x
+// Delete : 댓글 삭제
+
+// 댓글 삭제 = D = Delete
+
+async function deleteComment(id) {
+  if (!confirm("정말 이 댓글을 삭제할까요?")) return;
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?id=eq.${id}`,
+    {
+      method: "DELETE",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Prefer: "return=minimal",
+      },
+    }
+  );
+  if (!res.ok) {
+    console.error("삭제 실패", await res.text());
+    alert("댓글 삭제 중 오류가 발생했습니다.");
+    return;
+  }
+  await loadComments(selectedBook);
+}
+
+// 댓글 조회 = R = Read
+
+async function loadComments(book) {
+  const listEl = document.getElementById("commentList");
+  listEl.innerHTML = "<li>댓글 불러오는 중...</li>";
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?book_url=eq.${encodeURIComponent(
+      book.detail_url
+    )}&order=created_at.desc`;
+    const res = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
+    const rows = await res.json();
+    listEl.innerHTML = "";
+    const user = auth.currentUser;
+    if (rows.length === 0) {
+      listEl.innerHTML =
+        "<li>첫 번째 댓글을 남겨보세요 :미소짓는_상기된_얼굴:</li>";
+    } else {
+      rows.forEach((row) => {
+        const li = document.createElement("li");
+        let html = `<strong>${row.nickname}</strong> : ${row.comment_text}`;
+        if (user && row.firebase_uid === user.uid) {
+          html += ` <button type="button" class="delete-comment" data-id="${row.id}">삭제</button>`;
+        }
+        li.innerHTML = html;
+        listEl.appendChild(li);
+      });
+      listEl.querySelectorAll(".delete-comment").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-id");
+          deleteComment(id);
+        });
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    listEl.innerHTML = "<li>댓글을 불러오는 중 오류가 발생했습니다.</li>";
+  }
+}
+
+// 댓글 생성 = C = Create
+async function submitComment(e) {
+  e.preventDefault();
+  if (!selectedBook) {
+    alert("먼저 책을 선택해주세요.");
+    return;
+  }
+  const user = auth.currentUser; // Firebase 로그인 유저
+  if (!user) {
+    alert("댓글을 남기려면 먼저 GitHub로 로그인 해주세요.");
+    return;
+  }
+  const nickname = document.getElementById("commentNickname").value;
+  const text = document.getElementById("commentText").value;
+  const payload = {
+    book_url: selectedBook.detail_url,
+    nickname,
+    comment_text: text,
+    firebase_uid: user.uid,
+  };
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error("댓글 저장 실패");
+    document.getElementById("commentText").value = "";
+    await loadComments(selectedBook);
+  } catch (err) {
+    console.error(err);
+    alert("댓글 저장 중 오류가 발생했습니다.");
+  }
+}
+
+// 이벤트 실행
+document
+  .getElementById("commentForm")
+  .addEventListener("submit", submitComment);
+
 // 6. 책 검색 필터 실제 적용
 document.getElementById("searchInput").addEventListener("input", applyFilters);
 document
@@ -322,8 +450,10 @@ const cameraPreview = document.getElementById("cameraPreview");
 const captureButton = document.getElementById("captureButton");
 const closeCameraButton = document.getElementById("closeCameraButton");
 
-// 카메라 켜기
 let cameraStream = null;
+
+// 카메라 켜기
+
 cameraButton.addEventListener("click", async () => {
   try {
     if (cameraStream) {
