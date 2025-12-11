@@ -170,6 +170,9 @@ const categoryGoodsMap = {
   국내도서_자기계발: "디자인문구",
 };
 
+let selectedBook = null;
+// const, let, var -> var는 재생성,재할당 등 여러가지가 가능함. 근데 거의 안 씀. const, let만 주로 씀
+
 async function loadAllData() {
   const [books, goods] = await Promise.all([
     fetch(BOOKS_JSON_URL),
