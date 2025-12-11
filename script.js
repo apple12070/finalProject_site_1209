@@ -319,17 +319,16 @@ function renderRelatedGoods(keyword, filteredBooks) {
   });
 }
 
-// ==== 11. Supabase 댓글 렌더링 ====
+// 11. Supabase 댓글 렌더링
 // 준 Fullstack : 프론트 + 백엔드
 // CRUD
 // 사이트구축.플랫폼 => CRUD
 // Create : 댓글 작성
-// Read : 타인 읽음
-// Update : x
-// Delete : 댓글 삭제
+// Read : 타인이 읽을 수 있어야함
+// Update : 타인이 수정할 수 있는 권한 (우리는 안 쓸거임 코드 길어져서)
+// Delete : 댓글 삭제 기능
 
 // 댓글 버튼 클릭 이벤트 함수
-
 function openCommentSection(book) {
   selectedBook = book;
   document.getElementById(
@@ -338,8 +337,7 @@ function openCommentSection(book) {
   loadComments(book);
 }
 
-// 댓글 삭제 = D = Delete
-
+// 댓글 삭제 D : Delete
 async function deleteComment(id) {
   if (!confirm("정말 이 댓글을 삭제할까요?")) return;
   const res = await fetch(
@@ -361,8 +359,7 @@ async function deleteComment(id) {
   await loadComments(selectedBook);
 }
 
-// 댓글 조회 = R = Read
-
+// 댓글 조회 R : Read
 async function loadComments(book) {
   const listEl = document.getElementById("commentList");
   listEl.innerHTML = "<li>댓글 불러오는 중...</li>";
@@ -380,8 +377,7 @@ async function loadComments(book) {
     listEl.innerHTML = "";
     const user = auth.currentUser;
     if (rows.length === 0) {
-      listEl.innerHTML =
-        "<li>첫 번째 댓글을 남겨보세요 :미소짓는_상기된_얼굴:</li>";
+      listEl.innerHTML = "<li>첫 번째 댓글을 남겨보세요 😊</li>";
     } else {
       rows.forEach((row) => {
         const li = document.createElement("li");
@@ -405,7 +401,7 @@ async function loadComments(book) {
   }
 }
 
-// 댓글 생성 = C = Create
+// 댓글 생성 C : Create
 async function submitComment(e) {
   e.preventDefault();
   if (!selectedBook) {
@@ -444,6 +440,15 @@ async function submitComment(e) {
     alert("댓글 저장 중 오류가 발생했습니다.");
   }
 }
+
+// 이벤트 실행
+document
+  .getElementById("commentForm")
+  .addEventListener("submit", submitComment);
+
+// --------------------------------------------------
+
+// 6. 책 검색 필터 실제 적용
 
 // 이벤트 실행
 document
