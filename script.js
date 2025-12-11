@@ -450,6 +450,184 @@ document
   .getElementById("commentForm")
   .addEventListener("submit", submitComment);
 
+// 내 댓글 단어 / 감성 분석
+function analyzeComments(text) {
+  const stopWords = [
+    "은",
+    "는",
+    "이",
+    "가",
+    "을",
+    "를",
+    "에",
+    "의",
+    "와",
+    "과",
+    "도",
+    "으로",
+    "에서",
+    "입니다",
+    "정말",
+    "근데",
+    "하고",
+    "안데",
+  ];
+  const posWords = [
+    "좋아",
+    "재미",
+    "유익",
+    "감동",
+    "추천",
+    "최고",
+    "만족",
+    "훌륭",
+    "기대",
+    "가능",
+    "정말",
+  ];
+
+  const negWords = [
+    "별로",
+    "지루",
+    "최악",
+    "실망",
+    "아쉽",
+    "불편",
+    "복잡",
+    "싫",
+  ];
+
+  const cleaned = text.replace(/[^\p{L}0-9\s]/gu, " ");
+  const tokens = cleaned
+    .split(/\s+/)
+    .map((w) => w.trim())
+    .filter((w) => w && !stopWords.includes(w));
+  const freq = new Map();
+  for (const t of tokens) {
+    freq.set(t, (freq.get(t) || 0) + 1);
+  }
+  const topWords = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+  let posCount = 0;
+  let negCount = 0;
+  const posHit = new Map();
+  const negHit = new Map();
+  for (const token of tokens) {
+    if (posWords.some((p) => token.includes(p))) {
+      posCount++;
+      posHit.set(token, (posHit.get(token) || 0) + 1);
+    }
+    if (negWords.some((n) => token.includes(n))) {
+      negCount++;
+      negHit.set(token, (negHit.get(token) || 0) + 1);
+    }
+  }
+  const posTop = [...posHit.entries()].sort((a, b) => b[1] - a[1]);
+  const negTop = [...negHit.entries()].sort((a, b) => b[1] - a[1]);
+  return {
+    topWords,
+    posCount,
+    negCount,
+    totalWords: tokens.length,
+    posTop,
+    negTop,
+  };
+}
+
+// 댓글 모아보기 모달 페이지
+async function openMyCommentsModal() {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("먼저 GitHub로 로그인 해주세요.");
+    return;
+  }
+  const modal = document.getElementById("myCommentsModal");
+  const listEl = document.getElementById("myCommentsList");
+  const wordsEl = document.getElementById("myCommentsWords");
+  const sentiEl = document.getElementById("myCommentsSentiment");
+  const summaryEl = document.getElementById("myCommentsSummary");
+  modal.classList.remove("hidden");
+  listEl.innerHTML = "<li>내 댓글을 불러오는 중...</li>";
+  wordsEl.innerHTML = "";
+  sentiEl.textContent = "";
+  summaryEl.textContent = "";
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?firebase_uid=eq.${encodeURIComponent(
+      user.uid
+    )}&order=created_at.desc`;
+    const res = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    if (rows.length === 0) {
+      listEl.innerHTML = "<li>아직 작성한 댓글이 없습니다.</li>";
+      summaryEl.textContent = "작성한 댓글이 없어서 통계를 계산할 수 없습니다.";
+      return;
+    }
+    listEl.innerHTML = "";
+    const allText = [];
+    rows.forEach((row) => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <strong>${row.nickname}</strong>
+        <small>${row.book_url || ""}</small>
+        <span>${row.comment_text}</span>
+      `;
+      listEl.appendChild(li);
+      if (row.comment_text) allText.push(row.comment_text);
+    });
+    const joined = allText.join(" ");
+    const { topWords, posCount, negCount, totalWords, posTop, negTop } =
+      analyzeComments(joined);
+    wordsEl.innerHTML = "";
+    topWords.forEach(([word, count]) => {
+      const li = document.createElement("li");
+      li.textContent = `${word} (${count})`;
+      wordsEl.appendChild(li);
+    });
+    const posLabel = posTop.length
+      ? posTop
+          .slice(0, 5)
+          .map(([w, c]) => `${w}(${c})`)
+          .join(", ")
+      : "없음";
+    const negLabel = negTop.length
+      ? negTop
+          .slice(0, 5)
+          .map(([w, c]) => `${w}(${c})`)
+          .join(", ")
+      : "없음";
+    sentiEl.innerHTML = `
+    긍정 단어: ${posCount}개<br>
+    <small>${posLabel}</small><br><br>
+    부정 단어: ${negCount}개<br>
+    <small>${negLabel}</small>
+    `;
+    summaryEl.textContent = `총 댓글 ${rows.length}개, 분석된 단어 수: ${totalWords}개`;
+  } catch (err) {
+    console.error("내 댓글 로드 오류:", err);
+    listEl.innerHTML = "<li>댓글을 불러오는 중 오류가 발생했습니다.</li>";
+  }
+}
+
+// 댓글 모아보기 이벤트
+const myCommentsToggle = document.getElementById("myCommentsToggle");
+const myCommentsModal = document.getElementById("myCommentsModal");
+const myCommentsClose = document.getElementById("myCommentsClose");
+
+myCommentsToggle.addEventListener("click", openMyCommentsModal);
+myCommentsClose.addEventListener("click", () => {
+  myCommentsModal.classList.add("hidden");
+});
+myCommentsModal.addEventListener("click", (e) => {
+  if (e.target === myCommentsModal) {
+    myCommentsModal.classList.add("hidden");
+  }
+});
+
 // 6. 책 검색 필터 실제 적용
 document.getElementById("searchInput").addEventListener("input", applyFilters);
 document
